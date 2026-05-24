@@ -1,0 +1,10 @@
+numpy
+opencv-contrib-python
+matplotlib
+jupyterlab
+ipykernel
+pandas
+scipy
+pyyaml
+tqdm
+scikit-image
