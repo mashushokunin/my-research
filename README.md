@@ -16,8 +16,10 @@
 
 ```text
 my-research/
+├── apps/         # Jetsonなど実機上で動かすアプリケーションコード
 ├── configs/      # 実験パラメータやデータセット設定
 ├── data/         # データセット。大きなデータはGit管理しない
+├── deploy/       # 実機へのデプロイ、起動設定、環境構築
 ├── docs/         # 研究テーマ、学習ログ、論文メモ、進捗記録
 ├── external/     # 外部リポジトリや参考実装
 ├── notebooks/    # 試行錯誤、可視化、簡易分析
@@ -35,6 +37,18 @@ src/
 ├── features/       # 特徴点検出、記述子、マッチング
 └── slam/           # Visual SLAMや協調SLAMの主要処理
 ```
+
+## Application Layout
+
+```text
+apps/
+└── jetson/         # Jetson上で実際に動かす本番寄りコード
+    ├── camera/     # 実機カメラ入力に関する処理
+    ├── runtime/    # 実行ループ、ログ、状態管理
+    └── main.py     # Jetsonアプリの起動入口
+```
+
+Jetson固有の設定は `configs/jetson/` に置き、セットアップや自動起動に関するファイルは `deploy/jetson/` に置きます。
 
 ## Setup
 

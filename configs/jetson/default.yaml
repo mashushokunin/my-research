@@ -1,0 +1,22 @@
+# Default Jetson runtime configuration.
+
+robot:
+  id: jetson-01
+
+camera:
+  device: 0
+  width: 1280
+  height: 720
+  fps: 30
+
+features:
+  max_keypoints: 1000
+
+communication:
+  enabled: false
+  host: 127.0.0.1
+  port: 5000
+  publish_interval_sec: 1.0
+
+logging:
+  output_dir: results/jetson
