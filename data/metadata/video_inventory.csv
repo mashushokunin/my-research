@@ -1,0 +1,9 @@
+path,group,stem,suffix,size_bytes,openable,width,height,fps,frame_count,duration_sec,privacy_checked,quality_note,experiment_note
+structured/IMG_5978.MOV,structured,IMG_5978,.MOV,13814067,True,1080,1920,30.0,362,12.067,,,
+structured/IMG_5979.MOV,structured,IMG_5979,.MOV,14505571,True,1080,1920,30.0,363,12.1,,,
+structured/IMG_5980.MOV,structured,IMG_5980,.MOV,10999190,True,1080,1920,30.0,274,9.133,,,
+structured/IMG_5982.MOV,structured,IMG_5982,.MOV,12958492,True,1080,1920,30.0,330,11.0,,,
+structured/IMG_5983.MOV,structured,IMG_5983,.MOV,18416627,True,1080,1920,30.003,479,15.965,,,
+unstructured_like/IMG_5975.MOV,unstructured_like,IMG_5975,.MOV,23630018,True,1080,1920,30.0,335,11.167,,,
+unstructured_like/IMG_5976.MOV,unstructured_like,IMG_5976,.MOV,19432082,True,1080,1920,30.0,324,10.8,,,
+unstructured_like/IMG_5981.MOV,unstructured_like,IMG_5981,.MOV,17031821,True,1080,1920,30.003,431,14.365,,,
