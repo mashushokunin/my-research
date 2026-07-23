@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 
 def iter_sequences(frames_root: Path):
+    # metadata.json があるディレクトリを、1つの動画シーケンスとして扱います。
     for metadata_path in sorted(frames_root.rglob("metadata.json")):
         yield metadata_path.parent
 
@@ -26,6 +27,7 @@ def analyze_sequence(
     orb: cv2.ORB,
     matcher: cv2.BFMatcher,
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
+    # 1シーケンス内の各フレームでORB特徴点を検出し、直前フレームとのマッチ数を数えます。
     frame_paths = sorted(sequence_dir.glob("frame_*.jpg"))
     frame_rows: list[dict[str, object]] = []
     match_counts: list[int] = []
@@ -33,17 +35,20 @@ def analyze_sequence(
     sequence = sequence_name(sequence_dir, frames_root)
 
     for index, frame_path in enumerate(tqdm(frame_paths, desc=sequence, unit="frame")):
+        # ORBは輝度画像で特徴点を検出するので、グレースケールで読みます。
         image = cv2.imread(str(frame_path), cv2.IMREAD_GRAYSCALE)
         if image is None:
             keypoint_count = 0
             match_count = 0
             descriptors = None
         else:
+            # keypoints は位置・向き・スケールなど、descriptors は32 byteのORB記述子です。
             keypoints, descriptors = orb.detectAndCompute(image, None)
             keypoint_count = len(keypoints)
             if previous_descriptors is None or descriptors is None:
                 match_count = 0
             else:
+                # ORB記述子はバイナリなので、Hamming距離で総当たりマッチングします。
                 matches = matcher.match(previous_descriptors, descriptors)
                 match_count = len(matches)
 
@@ -52,6 +57,7 @@ def analyze_sequence(
 
         frame_rows.append(
             {
+                # frame_metrics.csv はフレーム単位で、特徴点数と直前フレームへのマッチ数を確認するための表です。
                 "sequence": sequence,
                 "frame_file": frame_path.name,
                 "frame_index": index,
@@ -63,6 +69,7 @@ def analyze_sequence(
         previous_descriptors = descriptors
 
     keypoint_counts = [int(row["keypoints"]) for row in frame_rows]
+    # sequence_summary.csv は動画単位の平均値・最小値・最大値をまとめます。
     summary = {
         "sequence": sequence,
         "frames": len(frame_rows),
@@ -105,6 +112,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    # nfeatures は検出するORB特徴点の上限です。通信量評価の基準になります。
     orb = cv2.ORB_create(nfeatures=args.nfeatures)
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 

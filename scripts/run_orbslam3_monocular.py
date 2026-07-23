@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 def iter_sequences(sequence_root: Path):
+    # rgb.txt があるディレクトリを、ORB-SLAM3に渡せる1シーケンスとして扱います。
     for rgb_txt in sorted(sequence_root.rglob("rgb.txt")):
         yield rgb_txt.parent
 
@@ -20,6 +21,8 @@ def result_name(sequence_dir: Path, sequence_root: Path) -> str:
 
 
 def build_env(orbslam_root: Path, pangolin_build: Path) -> dict[str, str]:
+    # ORB-SLAM3が依存する共有ライブラリを実行時に見つけられるよう、環境変数を補います。
+    # macOSはDYLD_LIBRARY_PATH、Jetson/LinuxはLD_LIBRARY_PATHを使います。
     env = os.environ.copy()
     library_paths = [
         orbslam_root / "lib",
@@ -27,11 +30,10 @@ def build_env(orbslam_root: Path, pangolin_build: Path) -> dict[str, str]:
         orbslam_root / "Thirdparty/g2o/lib",
         pangolin_build,
     ]
-    existing = env.get("DYLD_LIBRARY_PATH")
     values = [str(path) for path in library_paths]
-    if existing:
-        values.append(existing)
-    env["DYLD_LIBRARY_PATH"] = ":".join(values)
+    for variable in ["DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"]:
+        existing = env.get(variable)
+        env[variable] = ":".join([*values, existing] if existing else values)
     return env
 
 
@@ -45,9 +47,11 @@ def run_sequence(
     env: dict[str, str],
     overwrite: bool,
 ) -> dict[str, object]:
+    # 1シーケンスに対して mono_tum を実行し、ログと軌跡を output_dir に保存します。
     output_dir = output_root / result_name(sequence_dir, sequence_root)
     trajectory = output_dir / "KeyFrameTrajectory.txt"
     if trajectory.exists() and not overwrite:
+        # 既に軌跡がある場合は、--overwrite がない限り再実行しません。
         return {
             "sequence": str(sequence_dir.relative_to(sequence_root)),
             "status": "skipped_existing",
@@ -61,6 +65,7 @@ def run_sequence(
     command = [str(binary), str(vocabulary), str(settings), str(sequence_dir)]
     log_path = output_dir / "run.log"
     with log_path.open("w", encoding="utf-8") as log_file:
+        # ORB-SLAM3の標準出力と標準エラーをrun.logにまとめ、後から失敗原因を追えるようにします。
         log_file.write("$ " + " ".join(command) + "\n\n")
         log_file.flush()
         process = subprocess.run(
@@ -103,6 +108,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    # mono_tum は単眼画像列を処理するORB-SLAM3のサンプル実行ファイルです。
     binary = args.orbslam_root / "Examples/Monocular/mono_tum"
     vocabulary = args.orbslam_root / "Vocabulary/ORBvoc.txt"
     env = build_env(args.orbslam_root, args.pangolin_build)
@@ -110,11 +116,13 @@ def main() -> None:
     required_paths = [binary, vocabulary, args.settings, args.sequence_root]
     missing = [path for path in required_paths if not path.exists()]
     if missing:
+        # 実行前に必要ファイルの不足を明示します。
         raise FileNotFoundError("Missing required paths: " + ", ".join(str(path) for path in missing))
 
     summaries = []
     sequence_dirs = list(iter_sequences(args.sequence_root))
     if args.only:
+        # 特定の1シーケンスだけ実行したい時に使います。
         sequence_dirs = [
             sequence_dir
             for sequence_dir in sequence_dirs

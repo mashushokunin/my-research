@@ -12,11 +12,13 @@ import numpy as np
 
 
 def iter_sequences(frames_root: Path):
+    # フレーム抽出済みの各シーケンスを対象にします。
     for metadata_path in sorted(frames_root.rglob("metadata.json")):
         yield metadata_path.parent
 
 
 def sample_frames(frame_paths: list[Path], max_frames: int) -> list[Path]:
+    # 動画全体の雰囲気を見るため、先頭から末尾まで等間隔にサンプルします。
     if len(frame_paths) <= max_frames:
         return frame_paths
 
@@ -25,6 +27,7 @@ def sample_frames(frame_paths: list[Path], max_frames: int) -> list[Path]:
 
 
 def resize_with_label(image_path: Path, tile_width: int) -> np.ndarray:
+    # 1枚のフレームを小さくリサイズし、下部にファイル名ラベルを付けます。
     image = cv2.imread(str(image_path))
     if image is None:
         raise ValueError(f"Could not read {image_path}")
@@ -57,6 +60,7 @@ def make_contact_sheet(
     columns: int,
     tile_width: int,
 ) -> Path | None:
+    # 1シーケンス分の代表フレームを1枚の確認画像に並べます。
     frame_paths = sorted(sequence_dir.glob("frame_*.jpg"))
     if not frame_paths:
         return None
@@ -68,6 +72,7 @@ def make_contact_sheet(
 
     sheet = np.full((rows * tile_height, columns * tile_width, 3), 245, dtype=np.uint8)
     for index, tile in enumerate(tiles):
+        # タイルを行・列に配置して、一覧しやすいコンタクトシートを作ります。
         row = index // columns
         column = index % columns
         y = row * tile_height

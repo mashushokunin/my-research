@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 
 ORB_DESCRIPTOR_BYTES = 32
+# 通信パケットサイズを見積もるためのkeypoint情報サイズです。
 COMPACT_KEYPOINT_BYTES = 9
 FLOAT_KEYPOINT_BYTES = 24
 
@@ -27,6 +28,8 @@ def sequence_name(sequence_dir: Path, frames_root: Path) -> str:
 
 
 def keypoints_to_array(keypoints: tuple[cv2.KeyPoint, ...]) -> np.ndarray:
+    # cv2.KeyPoint はそのままだとnp.savezで扱いにくいので、数値配列に変換します。
+    # 列は x, y, size, angle, response, octave, class_id です。
     rows = [
         [
             keypoint.pt[0],
@@ -49,6 +52,7 @@ def export_sequence(
     orb: cv2.ORB,
     overwrite: bool,
 ) -> list[dict[str, object]]:
+    # 1シーケンス分のORB特徴点とdescriptorを、フレームごとの .npz に保存します。
     sequence = sequence_name(sequence_dir, frames_root)
     output_sequence_dir = output_root / sequence
     output_sequence_dir.mkdir(parents=True, exist_ok=True)
@@ -57,10 +61,12 @@ def export_sequence(
     for frame_path in tqdm(sorted(sequence_dir.glob("frame_*.jpg")), desc=sequence, unit="frame"):
         output_path = output_sequence_dir / f"{frame_path.stem}.npz"
         if output_path.exists() and not overwrite:
+            # 既存の特徴量ファイルがあれば再利用し、manifestだけ作り直せるようにします。
             npz_size = output_path.stat().st_size
             with np.load(output_path) as existing:
                 keypoint_count = int(existing["keypoints"].shape[0])
         else:
+            # 特徴点抽出はグレースケール画像で行います。
             image = cv2.imread(str(frame_path), cv2.IMREAD_GRAYSCALE)
             if image is None:
                 keypoints = []
@@ -71,6 +77,8 @@ def export_sequence(
                     descriptors = np.empty((0, ORB_DESCRIPTOR_BYTES), dtype=np.uint8)
 
             keypoint_array = keypoints_to_array(tuple(keypoints))
+            # keypoints と descriptors を1フレーム単位で保存します。
+            # 今後、画像ではなく特徴量だけを送る実験の入力になります。
             np.savez_compressed(
                 output_path,
                 keypoints=keypoint_array,
@@ -81,6 +89,7 @@ def export_sequence(
 
         rows.append(
             {
+                # manifest.csv は、各フレームの特徴量ファイルと通信量概算を対応づける一覧です。
                 "sequence": sequence,
                 "frame_file": frame_path.name,
                 "feature_file": str(output_path.relative_to(output_root)),

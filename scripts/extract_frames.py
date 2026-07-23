@@ -17,6 +17,7 @@ VIDEO_EXTENSIONS = {".avi", ".mkv", ".mov", ".mp4"}
 
 
 def iter_videos(input_root: Path):
+    # data/interim などの生成物を再び入力動画として拾わないよう除外します。
     ignored_parts = {"interim", "processed", "sample"}
     for path in sorted(input_root.rglob("*")):
         if not path.is_file():
@@ -29,11 +30,15 @@ def iter_videos(input_root: Path):
 
 
 def output_dir_for(video_path: Path, input_root: Path, output_root: Path) -> Path:
+    # data/structured/IMG_5982.MOV -> data/interim/frames/structured/IMG_5982/
+    # のように、元のグループ構造を保ったままフレーム出力先を決めます。
     relative = video_path.relative_to(input_root)
     return output_root / relative.parent / video_path.stem
 
 
 def prepare_sequence_dir(sequence_dir: Path, overwrite: bool) -> bool:
+    # 既存出力がある場合、--overwrite がなければ処理をスキップします。
+    # 間違って過去の抽出結果を消さないための保護です。
     if not sequence_dir.exists():
         sequence_dir.mkdir(parents=True, exist_ok=True)
         return True
@@ -59,6 +64,7 @@ def extract_video(
     target_fps: float,
     overwrite: bool,
 ) -> dict[str, object]:
+    # 1本の動画をOpenCVで読み、target_fpsに間引いてJPEGフレームを保存します。
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         return {
@@ -72,6 +78,8 @@ def extract_video(
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     duration_sec = total_frames / source_fps if source_fps > 0 else 0.0
+    # 次に保存すべき時刻を next_emit_sec で管理します。
+    # 例: target_fps=10 なら 0.0, 0.1, 0.2... 秒付近のフレームを保存します。
     interval_sec = 1.0 / target_fps
     next_emit_sec = 0.0
     frames_written = 0
@@ -96,6 +104,7 @@ def extract_video(
             timestamp_sec = source_frame_index / source_fps if source_fps > 0 else 0.0
 
             if timestamp_sec + 1e-9 >= next_emit_sec:
+                # ORB-SLAM3や後続解析が扱いやすいよう、連番ファイル名で保存します。
                 output_name = f"frame_{frames_written:06d}.jpg"
                 output_path = sequence_dir / output_name
                 cv2.imwrite(str(output_path), frame)
@@ -113,6 +122,7 @@ def extract_video(
 
     cap.release()
 
+    # 後でNotebookやスクリプトが、何fpsで何枚抽出したか確認するためのメタデータです。
     metadata = {
         "video": str(video_path.relative_to(input_root)),
         "status": "ok",
@@ -129,6 +139,7 @@ def extract_video(
         json.dump(metadata, json_file, indent=2, ensure_ascii=False)
 
     with (sequence_dir / "frames.csv").open("w", newline="", encoding="utf-8") as csv_file:
+        # frames.csv は「保存された画像」と「元動画内の時刻」を対応させる表です。
         writer = csv.DictWriter(csv_file, fieldnames=["frame_file", "source_frame_index", "timestamp_sec"])
         writer.writeheader()
         writer.writerows(rows)

@@ -13,8 +13,11 @@ from tqdm import tqdm
 
 
 ORB_DESCRIPTOR_BYTES = 32
+# compact は、keypoint情報を量子化して小さく送る想定の概算サイズです。
 COMPACT_KEYPOINT_BYTES = 9
+# float は、keypoint情報をfloat中心で素直に送る想定の概算サイズです。
 FLOAT_KEYPOINT_BYTES = 24
+# Hamming距離がこの値以下のマッチを「良いマッチ」として数えます。
 GOOD_MATCH_DISTANCE = 64
 
 
@@ -45,6 +48,7 @@ def analyze_sequence(
     nfeatures: int,
     good_match_distance: int,
 ) -> dict[str, object]:
+    # nfeatures を変えながら、通信量とフレーム間マッチ数がどう変わるかを評価します。
     orb = cv2.ORB_create(nfeatures=nfeatures)
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
@@ -61,6 +65,7 @@ def analyze_sequence(
         desc=f"{sequence_name(sequence_dir, frames_root)} n={nfeatures}",
         unit="frame",
     ):
+        # 特徴点抽出はグレースケール画像で行います。
         image = cv2.imread(str(frame_path), cv2.IMREAD_GRAYSCALE)
         if image is None:
             descriptors = None
@@ -70,6 +75,7 @@ def analyze_sequence(
             keypoint_counts.append(len(keypoints))
 
         if previous_descriptors is not None and descriptors is not None:
+            # 隣接フレーム間の対応点を数え、追跡しやすさの目安にします。
             matches = matcher.match(previous_descriptors, descriptors)
             distances = [match.distance for match in matches]
             match_counts.append(len(matches))
@@ -82,6 +88,7 @@ def analyze_sequence(
         previous_descriptors = descriptors
 
     avg_keypoints = safe_mean([float(count) for count in keypoint_counts])
+    # descriptorだけなら 32 bytes/keypoint、compact packetなら 41 bytes/keypoint として概算します。
     descriptor_bytes = [count * ORB_DESCRIPTOR_BYTES for count in keypoint_counts]
     compact_packet_bytes = [
         count * (ORB_DESCRIPTOR_BYTES + COMPACT_KEYPOINT_BYTES) for count in keypoint_counts
@@ -92,6 +99,7 @@ def analyze_sequence(
     avg_jpeg_bytes = safe_mean([float(size) for size in jpeg_sizes])
     avg_compact_packet = safe_mean([float(size) for size in compact_packet_bytes])
 
+    # summary.csv の1行は「1シーケンス x 1つのnfeatures設定」に対応します。
     return {
         "sequence": sequence_name(sequence_dir, frames_root),
         "frames": len(frame_paths),
@@ -159,6 +167,7 @@ def main() -> None:
     args = parse_args()
     rows: list[dict[str, object]] = []
     sequence_dirs = list(iter_sequences(args.frames_root))
+    # 各シーケンスに対して、250/500/1000/2000 のような複数の特徴点予算を試します。
     for nfeatures in args.nfeatures:
         for sequence_dir in sequence_dirs:
             rows.append(

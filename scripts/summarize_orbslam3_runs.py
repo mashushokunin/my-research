@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 def parse_log(log_path: Path) -> dict[str, object]:
+    # ORB-SLAM3のrun.logから、実行枚数・tracking時間・マップ初期化の有無を抜き出します。
     if not log_path.exists():
         return {
             "images": "",
@@ -19,6 +20,7 @@ def parse_log(log_path: Path) -> dict[str, object]:
         }
 
     text = log_path.read_text(encoding="utf-8", errors="replace")
+    # ログの表記に合わせて正規表現で必要な値だけを抽出します。
     images = re.search(r"Images in the sequence:\s+(\d+)", text)
     median = re.search(r"median tracking time:\s+([0-9.]+)", text)
     mean = re.search(r"mean tracking time:\s+([0-9.]+)", text)
@@ -32,6 +34,7 @@ def parse_log(log_path: Path) -> dict[str, object]:
 
 
 def count_trajectory_rows(path: Path) -> int:
+    # KeyFrameTrajectory.txt は1行が1キーフレームに対応するため、行数をキーフレーム数として使います。
     if not path.exists():
         return 0
     return sum(1 for line in path.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip())
@@ -47,6 +50,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     rows = []
+    # results/orbslam3_monocular/<sequence>/ ごとに実行結果を1行へ要約します。
     for result_dir in sorted(path for path in args.results_root.iterdir() if path.is_dir()):
         trajectory = result_dir / "KeyFrameTrajectory.txt"
         log_values = parse_log(result_dir / "run.log")

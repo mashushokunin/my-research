@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 def iter_sequences(frames_root: Path):
+    # extract_frames.py が作った frames.csv を持つディレクトリを対象にします。
     for frames_csv in sorted(frames_root.rglob("frames.csv")):
         yield frames_csv.parent
 
@@ -19,6 +20,8 @@ def read_frame_rows(sequence_dir: Path) -> list[dict[str, str]]:
 
 
 def write_rgb_txt(sequence_dir: Path, frames_root: Path, output_root: Path) -> Path:
+    # ORB-SLAM3の mono_tum は、画像そのものではなく「timestamp 画像パス」の一覧を読みます。
+    # その一覧が rgb.txt です。
     relative_sequence = sequence_dir.relative_to(frames_root)
     output_sequence_dir = output_root / relative_sequence
     output_sequence_dir.mkdir(parents=True, exist_ok=True)
@@ -32,6 +35,7 @@ def write_rgb_txt(sequence_dir: Path, frames_root: Path, output_root: Path) -> P
         out.write("# file: generated from extracted frames\n")
         out.write("# timestamp filename\n")
         for row in rows:
+            # rgb.txt 内のパスは、rgb.txt が置かれるディレクトリから見た相対パスです。
             image_path = relative_frames_dir / row["frame_file"]
             out.write(f"{row['timestamp_sec']} {image_path.as_posix()}\n")
 

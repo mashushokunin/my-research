@@ -14,6 +14,7 @@ VIDEO_EXTENSIONS = {".avi", ".mkv", ".mov", ".mp4"}
 
 
 def iter_videos(data_root: Path):
+    # data/interim や processed は処理結果置き場なので、元動画の探索対象から外します。
     ignored_parts = {"interim", "processed", "sample"}
     for path in sorted(data_root.rglob("*")):
         if not path.is_file():
@@ -26,6 +27,7 @@ def iter_videos(data_root: Path):
 
 
 def read_video_metadata(path: Path) -> dict[str, object]:
+    # OpenCVで動画を開き、解像度・FPS・フレーム数など実験前提になる情報を取得します。
     cap = cv2.VideoCapture(str(path))
     opened = cap.isOpened()
 
@@ -49,6 +51,7 @@ def read_video_metadata(path: Path) -> dict[str, object]:
 
 def build_row(path: Path, data_root: Path) -> dict[str, object]:
     relative = path.relative_to(data_root)
+    # data/structured/IMG_xxxx.MOV の structured 部分を group として扱います。
     group = relative.parts[0] if len(relative.parts) > 1 else ""
     metadata = read_video_metadata(path)
 
@@ -79,6 +82,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     data_root = args.data_root
+    # 各動画を1行にまとめ、後続の確認・実験で対象動画を把握しやすくします。
     rows = [build_row(path, data_root) for path in iter_videos(data_root)]
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
