@@ -1,0 +1,9 @@
+sequence,trajectory_exists,keyframes,images,map_init,median_tracking_time,mean_tracking_time
+structured_IMG_5978,True,87,121,yes,0.0256888,0.0276902
+structured_IMG_5979,True,48,121,yes,0.0442075,0.0453089
+structured_IMG_5980,True,59,92,yes,0.0292543,0.0312843
+structured_IMG_5982,True,45,110,yes,0.0376494,0.0346717
+structured_IMG_5983,True,0,160,yes,0.0316915,0.0317646
+unstructured_like_IMG_5975,True,68,112,yes,0.0647354,0.0654765
+unstructured_like_IMG_5976,True,52,108,yes,0.0605995,0.0621038
+unstructured_like_IMG_5981,True,74,144,yes,0.050318,0.052029

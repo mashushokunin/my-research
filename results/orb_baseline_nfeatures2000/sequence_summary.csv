@@ -1,0 +1,9 @@
+sequence,frames,nfeatures,avg_keypoints,min_keypoints,max_keypoints,avg_descriptor_bytes_per_frame,avg_matches_to_previous,min_matches_to_previous,max_matches_to_previous
+structured/IMG_5978,25,2000,1960.92,1565,2000,62749.44,929.208,486,1376
+structured/IMG_5979,25,2000,2000.0,2000,2000,64000.0,1138.667,811,1366
+structured/IMG_5980,19,2000,2000.0,2000,2000,64000.0,969.444,621,1286
+structured/IMG_5982,22,2000,1999.727,1995,2000,63991.273,954.714,799,1207
+structured/IMG_5983,32,2000,2000.0,2000,2000,64000.0,888.806,495,1487
+unstructured_like/IMG_5975,23,2000,2000.0,2000,2000,64000.0,830.273,760,937
+unstructured_like/IMG_5976,22,2000,2000.0,2000,2000,64000.0,813.476,654,1165
+unstructured_like/IMG_5981,29,2000,2000.0,2000,2000,64000.0,889.857,697,1168

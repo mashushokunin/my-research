@@ -6,6 +6,11 @@
 
 ```text
 data/
+├── metadata/            # 動画一覧、撮影条件、品質確認メモ
+├── sample/              # Git管理できる小さい確認用データ
+├── raw/                 # Git管理しない生データ
+├── interim/             # Git管理しない中間生成物
+├── processed/           # Git管理しない処理済みデータ
 ├── structured/          # 構造環境の撮影データ
 └── unstructured_like/   # 非構造環境もどきの撮影データ
 ```
@@ -14,7 +19,8 @@ data/
 
 - `structured/` には、机、棚、廊下など形状や配置が比較的整理された環境の画像を置きます。
 - `unstructured_like/` には、物が散らばっている場所や、構造が複雑に見える環境の画像を置きます。
-- 大きな画像や動画をGit管理しない場合は、保存先と対応関係をこのREADMEまたは別のメモに残します。
+- 大きな画像や動画はGit管理せず、保存先と対応関係を `data/metadata/` または `artifacts/README.md` に残します。
+- `git clone` だけで再現したい小さい確認用データは `data/sample/` に置きます。
 
 ## Current Workflow
 

@@ -46,14 +46,25 @@ data/interim/
 
 # =========================
 # 実験結果
-# 画像出力・ログ・モデル・キャリブレーション結果など
+# 大きな出力はGit管理しないが、小さい要約CSVは再現性のため管理できる
 # =========================
-results/
+results/*
+!results/README.md
+!results/**/
+results/**/*
+!results/**/
+!results/**/summary.csv
+!results/**/group_summary.csv
+!results/**/sequence_summary.csv
 outputs/
 logs/
 
-# results/ の運用メモだけはGit管理する
-!results/README.md
+# =========================
+# 外部成果物
+# 大きなモデル、データ、ビルド成果物は artifacts/README.md に取得方法を残す
+# =========================
+artifacts/*
+!artifacts/README.md
 
 # =========================
 # 画像・動画・重いファイル
@@ -70,15 +81,6 @@ logs/
 *.MOV
 *.mp4
 *.MP4
-
-# =========================
-# 学習済みモデル・重みファイル
-# =========================
-*.pt
-*.pth
-*.onnx
-*.h5
-*.ckpt
 
 # =========================
 # 一時ファイル

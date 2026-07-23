@@ -21,6 +21,8 @@ my-research/
 ├── data/         # データセット。大きなデータはGit管理しない
 ├── deploy/       # 実機へのデプロイ、起動設定、環境構築
 ├── docs/         # 研究テーマ、学習ログ、論文メモ、進捗記録
+├── models/       # JetsonやPC実行に必要な小さいモデル・キャリブレーション
+├── artifacts/    # Git管理しない大きな成果物の取得方法
 ├── notebooks/    # 試行錯誤、可視化、簡易分析
 ├── results/      # 実験結果、評価値、出力画像、ログ
 ├── scripts/      # 実験実行や前処理のスクリプト
@@ -61,5 +63,9 @@ pip install -r requirements.txt
 
 - `data/raw/`, `data/interim/`, `data/processed/` はGit管理しません。
 - 小さな確認用データだけ `data/sample/` に置きます。
-- 実験結果は `results/` に保存しますが、大きな出力はGit管理しません。
+- Jetson実行に必要な小さいモデルやキャリブレーション結果は `models/` に置いてGit管理します。
+- 大きなモデル、動画、抽出フレーム、ビルド成果物は `artifacts/` や外部ストレージで管理し、取得方法だけを残します。
+- 実験結果は `results/` に保存しますが、大きな出力はGit管理しません。小さい `summary.csv`, `group_summary.csv`, `sequence_summary.csv` は再現性のため管理できます。
 - 実験条件は `configs/` に保存し、再現できる形で残します。
+
+詳しい運用ルールは `docs/reproducibility.md` にまとめています。
