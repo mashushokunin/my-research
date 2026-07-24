@@ -42,6 +42,30 @@ python scripts/evaluate_feature_budgets.py
 
 出力先は `results/feature_budgets/summary.csv` です。`compact_packet_bytes` は、各特徴点につき `x, y, angle, octave, response` を量子化して送り、ORB descriptor 32 bytes を添える想定の概算です。
 
+SLAMを実行する前に、マッチ数、RANSAC inlier、特徴点の空間分布、明るさ、ブレ指標を評価します。
+
+```bash
+python scripts/evaluate_preslam_geometry.py --max-pairs-per-sequence 80
+```
+
+出力先は `results/preslam_geometry/` です。`summary.csv` と `group_summary.csv` は研究説明用の小さい要約で、`pair_metrics.csv` は詳細確認用です。
+
+同じ通信量制約で、どの特徴点を送るべきか比較します。
+
+```bash
+python scripts/evaluate_feature_selection.py --max-pairs-per-sequence 80
+```
+
+`top_response`, `grid`, `random` を比較し、同じ特徴点数でRANSAC inlierがどれだけ残るかを見ます。
+
+評価結果から図を作成します。
+
+```bash
+python scripts/plot_preslam_results.py
+```
+
+出力先は `results/figures/` です。
+
 各フレームの ORB keypoint と descriptor を `.npz` として保存します。
 
 ```bash
