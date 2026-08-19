@@ -1,16 +1,18 @@
 # Reproducibility Policy
 
-このリポジトリでは、PC側の実験とJetson上の実行をできるだけ同じ状態で再開できるように、Git管理するものと外部管理するものを分けます。
+このリポジトリでは、Mac上またはMATLAB OnlineでのMATLAB実験を再開できるように、Git管理するものと外部管理するものを分けます。既存のPython・Jetson実験も研究履歴として維持します。
 
 ## Gitで管理するもの
 
-- 実装コード: `src/`, `scripts/`, `apps/`
+- 実装コード: `src/`, `experiments/`, `simulink/`
+- 既存の実装資産: `scripts/`, `apps/`, `patches/`
 - 実行設定: `configs/`
-- Jetson環境構築: `deploy/jetson/`
+- 既存のJetson環境構築: `deploy/jetson/`
 - 小さいモデルやキャリブレーション結果: `models/`
 - 実験メタデータ: `data/metadata/`
-- 小さい要約結果: `results/**/summary.csv`, `results/**/group_summary.csv`, `results/**/sequence_summary.csv`
+- 小さい要約結果: `results/**/summary.csv`, `results/**/group_summary.csv`, `results/**/sequence_summary.csv`, `results/**/ate_summary.csv`
 - 研究メモと再現手順: `docs/`, `README.md`
+- MATLABソース、Live Script、Simulinkモデル: `*.m`, `*.mlx`, `*.slx`
 
 ## Gitで管理しないもの
 
@@ -20,8 +22,17 @@
 - ORB-SLAM3やPangolinなどの外部リポジトリとビルド成果物
 - 大きい学習済みモデル
 - ログ、接触シート、軌跡テキストなど再生成できる結果
+- MATLAB/Simulinkの自動保存、キャッシュ、生成コード
 
-## Jetsonへ持っていく流れ
+## MATLAB実験を再開する流れ
+
+1. MATLABまたはMATLAB Onlineでリポジトリを開きます。
+2. 必要なToolboxを確認します。
+3. EuRoCを`data/euroc/`へ配置します。
+4. `configs/matlab/`の実験条件を確認します。
+5. `experiments/`の対象実験を実行し、結果を`results/`へ保存します。
+
+## 既存のJetson実験を再開する流れ
 
 1. Jetsonでリポジトリをcloneします。
 2. `deploy/jetson/install.sh` で依存関係と外部リポジトリを準備します。

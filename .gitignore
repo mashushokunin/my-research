@@ -14,6 +14,18 @@ __pycache__/
 *.pyd
 
 # =========================
+# MATLAB / Simulink
+# ソースの .m, .mlx, .slx はGit管理する
+# =========================
+*.asv
+*.m~
+autosave/
+slprj/
+*.slxc
+codegen/
+*.mex*
+
+# =========================
 # Jupyter Notebook 関連
 # =========================
 .ipynb_checkpoints/
@@ -54,6 +66,7 @@ results/*
 !results/**/
 results/**/*
 !results/**/
+!results/**/README.md
 !results/**/summary.csv
 !results/**/group_summary.csv
 !results/**/sequence_summary.csv

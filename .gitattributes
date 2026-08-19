@@ -1,0 +1,28 @@
+* text=auto
+
+# MATLAB source files are text, not Objective-C source.
+*.m text eol=lf diff
+
+# MATLAB and Simulink binary formats
+*.mlx binary
+*.mat binary
+*.fig binary
+*.mlapp binary
+*.mdl binary
+*.slx binary
+*.mdlp binary
+*.slxp binary
+*.sldd binary
+*.p binary
+*.mexa64 binary
+*.mexmaci64 binary
+*.mexmaca64 binary
+*.mexw64 binary
+
+# Other binary research artifacts
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.pdf binary
+*.docx binary
+*.xlsx binary

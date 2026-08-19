@@ -6,6 +6,7 @@
 
 ```text
 data/
+├── euroc/               # Git管理しないEuRoC MAV Dataset
 ├── metadata/            # 動画一覧、撮影条件、品質確認メモ
 ├── sample/              # Git管理できる小さい確認用データ
 ├── raw/                 # Git管理しない生データ
@@ -17,12 +18,19 @@ data/
 
 ## Notes
 
+- `euroc/`には、MATLAB実験で使用するEuRoCのシーケンスを置きます。データ本体はGit管理しません。
 - `structured/` には、机、棚、廊下など形状や配置が比較的整理された環境の画像を置きます。
 - `unstructured_like/` には、物が散らばっている場所や、構造が複雑に見える環境の画像を置きます。
 - 大きな画像や動画はGit管理せず、保存先と対応関係を `data/metadata/` または `artifacts/README.md` に残します。
 - `git clone` だけで再現したい小さい確認用データは `data/sample/` に置きます。
 
-## Current Workflow
+## MATLAB Workflow
+
+1. EuRoCの対象シーケンスを`data/euroc/`へ配置します。
+2. `configs/matlab/`で対象シーケンスと実験条件を指定します。
+3. `experiments/`から実験を実行し、結果を`results/`へ保存します。
+
+## Previous Python Workflow
 
 1. `scripts/video_inventory.py` で動画一覧と基本メタデータを `data/metadata/video_inventory.csv` に保存します。
 2. `data/metadata/video_inventory.csv` の `privacy_checked` と `quality_note` を確認し、個人情報や撮影品質の問題を記録します。
