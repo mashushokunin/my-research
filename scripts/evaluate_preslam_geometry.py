@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Evaluate pre-SLAM image quality, matching, and two-view geometry."""
+"""SLAM前に分かる画像品質・特徴点対応・二視点幾何を評価します。
+
+ORB-SLAM3を実行する前段階で、動画がVisual SLAMに向いているかを調べるための
+スクリプトです。特徴点数、特徴点分布、マッチ数、RANSAC inlier数、通信量概算を
+まとめてCSVに出します。
+"""
 
 from __future__ import annotations
 
@@ -53,6 +58,7 @@ def read_gray(path: Path, resize_scale: float) -> np.ndarray | None:
 
 
 def image_quality(gray: np.ndarray | None) -> dict[str, float]:
+    # 明るさ、コントラスト、ブレの少なさを数値化し、SLAMが失敗しやすい条件を探します。
     if gray is None:
         return {
             "brightness": 0.0,
@@ -79,6 +85,8 @@ def keypoint_distribution(
     grid_rows: int,
     grid_cols: int,
 ) -> dict[str, float]:
+    # 特徴点が画像全体に散っているかを評価します。
+    # 一部に偏ると、マッチ数が多くても姿勢推定には弱くなる可能性があります。
     if not keypoints or width <= 0 or height <= 0:
         return {
             "occupied_grid_ratio": 0.0,
@@ -127,6 +135,8 @@ def estimate_geometry(
     keypoints_b: tuple[cv2.KeyPoint, ...],
     matches: list[cv2.DMatch],
 ) -> dict[str, float]:
+    # Homographyは平面運動に近い対応、Fundamental matrixは一般的な二視点幾何の対応を見ます。
+    # 本研究では特に、Fundamental matrixのinlier数を「相対位置推定に使えそうな対応点数」として扱います。
     distances = [float(match.distance) for match in matches]
     result = {
         "avg_match_distance": safe_mean(distances),
@@ -271,6 +281,7 @@ def evaluate_sequence(
                 geometry = estimate_geometry(keypoints_a, keypoints_b, matches)
                 distribution_a = keypoint_distribution(keypoints_a, width, height, grid_rows, grid_cols)
                 distribution_b = keypoint_distribution(keypoints_b, width, height, grid_rows, grid_cols)
+                # 1フレームあたりの特徴量パケットサイズを概算し、JPEG画像サイズと比較します。
                 compact_packet_bytes_per_frame = (
                     (len(keypoints_a) + len(keypoints_b))
                     * (ORB_DESCRIPTOR_BYTES + COMPACT_KEYPOINT_BYTES)
@@ -367,6 +378,7 @@ def main() -> None:
 
     sequence_summary = summarize(rows, ["sequence", "group", "nfeatures", "resize_scale", "frame_step"])
     group_summary = summarize(rows, ["group", "nfeatures", "resize_scale", "frame_step"])
+    # pair_metrics は詳細確認用、summary/group_summary は先生への説明やグラフ作成に使う要約です。
     write_csv(args.output_dir / "pair_metrics.csv", rows)
     write_csv(args.output_dir / "summary.csv", sequence_summary)
     write_csv(args.output_dir / "group_summary.csv", group_summary)

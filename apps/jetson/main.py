@@ -1,4 +1,9 @@
-"""Entry point for the Jetson runtime application."""
+"""Jetson実機でカメラ取得とSLAM実行を始めるための入口です。
+
+ここでは設定ファイルの読み込みと起動モードの分岐だけを行い、実際のカメラ処理や
+フレーム保存は `runtime/` 側へ委譲します。入口を薄くしておくと、PC側のテストと
+Jetson実機の処理を分けて確認しやすくなります。
+"""
 
 from __future__ import annotations
 
@@ -10,6 +15,7 @@ from runtime.runner import JetsonRuntime
 
 
 def parse_args() -> argparse.Namespace:
+    # Jetson上で実行するときに、設定ファイルだけ差し替えられるようにしています。
     parser = argparse.ArgumentParser(description="Run the Jetson SLAM application.")
     parser.add_argument(
         "--config",

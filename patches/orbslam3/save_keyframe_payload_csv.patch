@@ -1,0 +1,116 @@
+diff --git a/include/System.h b/include/System.h
+--- a/include/System.h
++++ b/include/System.h
+@@ -153,6 +153,7 @@ public:
+ 
+     void SaveTrajectoryEuRoC(const string &filename);
+     void SaveKeyFrameTrajectoryEuRoC(const string &filename);
++    void SaveKeyFramePayloadCSV(const string &filename);
+ 
+     void SaveTrajectoryEuRoC(const string &filename, Map* pMap);
+     void SaveKeyFrameTrajectoryEuRoC(const string &filename, Map* pMap);
+diff --git a/src/System.cc b/src/System.cc
+--- a/src/System.cc
++++ b/src/System.cc
+@@ -22,7 +22,8 @@
+ #include "Converter.h"
+ #include <thread>
+ #include <pangolin/pangolin.h>
+ #include <iomanip>
++#include <fstream>
+ #include <openssl/md5.h>
+ #include <boost/serialization/base_object.hpp>
+ #include <boost/serialization/string.hpp>
+@@ -1111,6 +1112,68 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string &filename)
+     }
+     f.close();
+ }
++
++void System::SaveKeyFramePayloadCSV(const string &filename)
++{
++    cout << endl << "Saving keyframe payload to " << filename << " ..." << endl;
++
++    // すべてのKeyFrameをID順に並べ、実験ごとに比較しやすいCSVへ出力します。
++    vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
++    sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
++
++    ofstream f;
++    f.open(filename.c_str());
++    f << "keyframe_id,frame_id,timestamp,image_width,image_height,keypoints,"
++      << "descriptor_rows,descriptor_cols,descriptor_bytes,"
++      << "pose_float32_bytes,pose_float64_bytes,bow_words,bow_bytes_estimate,"
++      << "valid_mappoints,tracked_mappoints_min2" << endl;
++
++    for(size_t i=0; i<vpKFs.size(); i++)
++    {
++        KeyFrame* pKF = vpKFs[i];
++        if(!pKF || pKF->isBad())
++            continue;
++
++        // 画像サイズ、特徴点数、descriptor、pose、BoW、MapPoint数を通信対象候補として記録します。
++        const int image_width = pKF->mnMaxX - pKF->mnMinX;
++        const int image_height = pKF->mnMaxY - pKF->mnMinY;
++        const int descriptor_rows = pKF->mDescriptors.rows;
++        const int descriptor_cols = pKF->mDescriptors.cols;
++        const size_t descriptor_bytes = pKF->mDescriptors.total() * pKF->mDescriptors.elemSize();
++        const size_t pose_float32_bytes = 7 * sizeof(float);
++        const size_t pose_float64_bytes = 7 * sizeof(double);
++        const size_t bow_words = pKF->mBowVec.size();
++        const size_t bow_bytes_estimate = bow_words * (sizeof(DBoW2::WordId) + sizeof(DBoW2::WordValue));
++
++        // 無効化されたMapPointを除き、実際に共有候補になり得るMapPoint数を数えます。
++        vector<MapPoint*> vpMPs = pKF->GetMapPointMatches();
++        int valid_mappoints = 0;
++        for(size_t j=0; j<vpMPs.size(); j++)
++        {
++            if(vpMPs[j] && !vpMPs[j]->isBad())
++                valid_mappoints++;
++        }
++
++        f << pKF->mnId << ","
++          << pKF->mnFrameId << ","
++          << fixed << setprecision(9) << pKF->mTimeStamp << ","
++          << image_width << ","
++          << image_height << ","
++          << pKF->N << ","
++          << descriptor_rows << ","
++          << descriptor_cols << ","
++          << descriptor_bytes << ","
++          << pose_float32_bytes << ","
++          << pose_float64_bytes << ","
++          << bow_words << ","
++          << bow_bytes_estimate << ","
++          << valid_mappoints << ","
++          << pKF->TrackedMapPoints(2)
++          << endl;
++    }
++
++    f.close();
++}
+ 
+ void System::SaveKeyFrameTrajectoryEuRoC(const string &filename, Map* pMap)
+ {
+diff --git a/Examples/Monocular/mono_euroc.cc b/Examples/Monocular/mono_euroc.cc
+--- a/Examples/Monocular/mono_euroc.cc
++++ b/Examples/Monocular/mono_euroc.cc
+@@ -190,15 +190,20 @@ int main(int argc, char **argv)
+     if (bFileName)
+     {
+         const string kf_file =  "kf_" + string(argv[argc-1]) + ".txt";
+         const string f_file =  "f_" + string(argv[argc-1]) + ".txt";
++        const string payload_file = "keyframe_payload_" + string(argv[argc-1]) + ".csv";
+         SLAM.SaveTrajectoryEuRoC(f_file);
+         SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
++        // 軌跡と同じ実行名で、KeyFrameごとの通信量分析用CSVも保存します。
++        SLAM.SaveKeyFramePayloadCSV(payload_file);
+     }
+     else
+     {
+         SLAM.SaveTrajectoryEuRoC("CameraTrajectory.txt");
+         SLAM.SaveKeyFrameTrajectoryEuRoC("KeyFrameTrajectory.txt");
++        // 実行名を付けない場合も、固定名で通信量分析用CSVを残します。
++        SLAM.SaveKeyFramePayloadCSV("KeyFramePayload.csv");
+     }
+ 
+     return 0;
+ }

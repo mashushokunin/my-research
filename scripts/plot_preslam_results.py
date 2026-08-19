@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Create plots for pre-SLAM and communication-efficiency experiments."""
+"""SLAM前評価と通信量評価の結果を説明用の図にします。
+
+CSVだけでは傾向を説明しにくいため、特徴点数、フレーム間隔、特徴点選択方法ごとに
+通信量と幾何的inlier数の変化を可視化します。
+"""
 
 from __future__ import annotations
 
@@ -25,6 +29,7 @@ def save_current(path: Path) -> None:
 
 
 def plot_feature_budget(feature_budget_csv: Path, output_dir: Path) -> None:
+    # 特徴点数を増やすと、通信量と有効なマッチ数がどう増えるかを確認します。
     if not feature_budget_csv.exists():
         return
     data = pd.read_csv(feature_budget_csv)
@@ -75,6 +80,7 @@ def plot_feature_budget(feature_budget_csv: Path, output_dir: Path) -> None:
 
 
 def plot_preslam_geometry(preslam_group_csv: Path, output_dir: Path) -> None:
+    # フレーム間隔が広がったときに、幾何的に使える対応点がどれだけ減るかを可視化します。
     if not preslam_group_csv.exists():
         return
     data = pd.read_csv(preslam_group_csv)
@@ -116,6 +122,7 @@ def plot_preslam_geometry(preslam_group_csv: Path, output_dir: Path) -> None:
 
 
 def plot_feature_selection(selection_group_csv: Path, output_dir: Path) -> None:
+    # 同じ通信量でも、特徴点の選び方でinlier数が変わることを図にします。
     if not selection_group_csv.exists():
         return
     data = pd.read_csv(selection_group_csv)

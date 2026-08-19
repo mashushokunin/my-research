@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Compare feature selection strategies under communication budgets."""
+"""通信量を固定したとき、どの特徴点を送るべきかを比較します。
+
+SLAMで全特徴点を送るのではなく、限られた数の特徴点だけを共有する場合を想定します。
+`top_response`、`grid`、`random` を同じ送信予算で比べ、通信量を増やさずに
+幾何的に使える対応点をどれだけ残せるかを評価します。
+"""
 
 from __future__ import annotations
 
@@ -52,10 +57,12 @@ def pair_indices(frame_count: int, frame_step: int, max_pairs: int) -> list[int]
 
 
 def select_top_response(keypoints: tuple[cv2.KeyPoint, ...], budget: int) -> list[int]:
+    # ORBのresponseが高い特徴点を優先します。強い特徴点はマッチしやすい傾向があります。
     return sorted(range(len(keypoints)), key=lambda index: keypoints[index].response, reverse=True)[:budget]
 
 
 def select_random(keypoints: tuple[cv2.KeyPoint, ...], budget: int, seed: str) -> list[int]:
+    # 比較用のベースラインです。戦略なしで選ぶとどれだけ悪くなるかを見ます。
     indices = list(range(len(keypoints)))
     rng = random.Random(seed)
     rng.shuffle(indices)
@@ -70,6 +77,7 @@ def select_grid(
     grid_rows: int,
     grid_cols: int,
 ) -> list[int]:
+    # 画像全体から均等に選ぶことで、特徴点が一部領域に偏るのを避けます。
     cells: list[list[int]] = [[] for _ in range(grid_rows * grid_cols)]
     for index, keypoint in enumerate(keypoints):
         x, y = keypoint.pt
@@ -113,6 +121,8 @@ def estimate_fundamental_inliers(
     selected_b: list[int],
     matches: list[cv2.DMatch],
 ) -> tuple[int, float]:
+    # Fundamental matrixのRANSAC inlierは、相対姿勢推定に使えそうな対応点の目安です。
+    # 単なるdescriptorマッチ数よりも、Visual SLAMに近い評価指標として使います。
     if len(matches) < 8:
         return 0, 0.0
 
@@ -272,6 +282,7 @@ def evaluate_sequence(
                         * (ORB_DESCRIPTOR_BYTES + COMPACT_KEYPOINT_BYTES)
                         / 2.0
                     )
+                    # JPEG画像をそのまま送る場合と、選択した特徴点だけを送る場合を比較します。
                     jpeg_bytes_per_frame = (frame_a.stat().st_size + frame_b.stat().st_size) / 2.0
 
                     rows.append(

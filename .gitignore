@@ -39,6 +39,7 @@ __pycache__/
 data/raw/
 data/processed/
 data/interim/
+data/euroc/
 
 # ただし、サンプルデータだけはGit管理してOK
 !data/sample/
@@ -56,6 +57,7 @@ results/**/*
 !results/**/summary.csv
 !results/**/group_summary.csv
 !results/**/sequence_summary.csv
+!results/**/ate_summary.csv
 outputs/
 logs/
 

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Evaluate ORB feature budgets for communication-efficient Visual SLAM."""
+"""ORB特徴点数を変えたときの通信量とマッチ数を評価します。
+
+画像全体を送る場合と、特徴点・descriptorだけを送る場合の差を確認するための
+SLAM前評価スクリプトです。ここでは軌跡精度までは見ず、通信量の概算と
+隣接フレーム間でどれだけ特徴点対応が残るかを調べます。
+"""
 
 from __future__ import annotations
 
@@ -22,6 +27,7 @@ GOOD_MATCH_DISTANCE = 64
 
 
 def iter_sequences(frames_root: Path):
+    # 抽出済みフレームは、各シーケンスに metadata.json がある前提で探索します。
     for metadata_path in sorted(frames_root.rglob("metadata.json")):
         yield metadata_path.parent
 
@@ -89,6 +95,7 @@ def analyze_sequence(
 
     avg_keypoints = safe_mean([float(count) for count in keypoint_counts])
     # descriptorだけなら 32 bytes/keypoint、compact packetなら 41 bytes/keypoint として概算します。
+    # この値は実通信パケットの厳密なサイズではなく、共有方式を比べるための基準値です。
     descriptor_bytes = [count * ORB_DESCRIPTOR_BYTES for count in keypoint_counts]
     compact_packet_bytes = [
         count * (ORB_DESCRIPTOR_BYTES + COMPACT_KEYPOINT_BYTES) for count in keypoint_counts
@@ -168,6 +175,7 @@ def main() -> None:
     rows: list[dict[str, object]] = []
     sequence_dirs = list(iter_sequences(args.frames_root))
     # 各シーケンスに対して、250/500/1000/2000 のような複数の特徴点予算を試します。
+    # 同じ動画に対して特徴点数だけを変えるので、通信量とマッチ数の関係を比較できます。
     for nfeatures in args.nfeatures:
         for sequence_dir in sequence_dirs:
             rows.append(

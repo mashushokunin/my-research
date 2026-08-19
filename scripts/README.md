@@ -108,3 +108,38 @@ python scripts/summarize_orbslam3_runs.py
 ```
 
 出力は `results/orbslam3_monocular/summary.csv` です。
+
+## ORB-SLAM3 EuRoC Baseline
+
+公開データセットEuRoCで、単体ORB-SLAM3を安定して実行するための基盤です。
+
+```bash
+python scripts/run_orbslam3_euroc.py \
+  --dataset-root data/euroc \
+  --sequence MH_01_easy \
+  --overwrite
+```
+
+出力先は `results/orbslam3_euroc/` です。各シーケンスに `run.log`, `run_summary.json`, `KeyFrameTrajectory.txt` を保存します。
+
+EuRoCのground truthと比較してATE RMSEを計算します。
+
+```bash
+python scripts/evaluate_trajectory_ate.py \
+  --trajectory results/orbslam3_euroc/MH_01_easy/KeyFrameTrajectory.txt \
+  --groundtruth data/euroc/MH_01_easy/mav0/state_groundtruth_estimate0/data.csv \
+  --output-dir results/orbslam3_euroc/MH_01_easy/ate \
+  --sequence MH_01_easy
+```
+
+キーフレーム時刻に対応する画像からORB特徴点を再抽出し、1キーフレームあたりの通信量を見積もります。
+
+```bash
+python scripts/estimate_keyframe_payload.py \
+  --trajectory results/orbslam3_euroc/MH_01_easy/KeyFrameTrajectory.txt \
+  --sequence-dir data/euroc/MH_01_easy \
+  --settings ../external-repos/ORB_SLAM3/Examples/Monocular/EuRoC.yaml \
+  --output-dir results/orbslam3_euroc/MH_01_easy/payload
+```
+
+詳しい手順は `docs/orbslam3_euroc_experiment.md` にまとめています。
